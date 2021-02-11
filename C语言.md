@@ -575,7 +575,7 @@ int sum2d(int ar[rows] [cols], int rows, int clos);	//错误
 
 # 字符串和字符串函数
 
-## 1、表示字符串和字符串I/O
+## 1.表示字符串和字符串I/O
 
 puts()和prinf()一样，都属于stdio.h系列的输入/输出函数。但是，与printf()不同的是，puts()函数只显示字符串，而且自动在显示的字符串末尾加上换行符。
 
@@ -599,7 +599,280 @@ printf("%p", *"sapce farers");	//输出结果为:s
 
  *"sapce farers"表示该字符串所指向地址上储存的值，输出应该是字符串 *”space farers“的首字符/
 
-### 1.2字符串数组和初始化
+### 1.2字符串数组和初始
+
+定义字符串数组时，必须让编译器知道需要多少空间。一种方法时用足够空间的数组储存字符串，在下面的声明中，用指定的字符串初始化数组m1:
+
+const char m1[40] = "Limit youself to one line's worth.";
+
+const 表示不会更改这个字符串。
+
+在指定数组大小时，要确保数组的元素个数至少比字符串长度多1（为了容纳空字符）。所有未被使用的元素都被自动初始化为0。
+
+省略数组初始化声明中的大小，编译器会自动计算数组的大小：
+
+const char m2[] = "If you can't think of anything, fake it.";
+
+字符数组名和其他数组名一样，是该数组首元素的地址。因此，假设有下面的初始化：
+
+char car[10] = "Tata";
+
+那么下面的表达式都为真：
+
+car = &car[0],	*car == 'T',	*(car+1) == car[1] == 'a'.
+
+还可以使用指针表示法创建字符串：const char *pt1 = "Something is pointing at me.";
+
+该声明和下面的声明几乎相同：
+
+const char ar1[] = "Something is pointing at me.";
+
+### 1.3数组和指针
+
+数组形式和指针形式有何不同呢？以上面声明为例，数组形式（ar1[]）在计算机的内存中分配为一个内含29个元素带的数组，每个元素被初始化为字符串字面量对应的字符。通常，字符串都作为可执行文件的一部分储存在数据段中。当把程序载入到内存时，也载入了程序中的字符串，字符串储存在静态存储区（static memery）中，但是，程序在开始运行时才会为该数组分配内存。此时，才将字符串拷贝到数组中。注意：此时字符串有两个副本，一个是在静态内存中的字符串字面量，另一个是储存在ar1数组中的字符串。
+
+***在数组形式中，ar1是地址常量***，不能更改ar1，如果改变了ar1，则意味着改变了数组的存储位置（即地址）。可以进行ar1+1这样的操作，标识数组的下一个元素，但是不允许进行++ar1这样的操作，递增运算符只能用于变量名前，不能用于常量。
+
+***指针形式（*pt1）也使得编译器为字符串在静态存储区预留***29个元素的空间。另外，一旦开始执行程序，它会为指针变量留出一个储存位置，并把字符串的地址存储在指针变量中。该变量最初指向该字符串的首字符，但是它的值可以改变。因此，可以使用递增运算符。例如：++pt1将指向第2个字符。
+
+字符串字面量被视为const数据。由于pt1指向这个const数据，所以应该把pt1声明为之指向const数据的指针。这意味着不能用pt1改变它所指向的数据，但仍然可以pt1的值。
+
+总之，初始化数组把静态存储区的字符串拷贝到数组中，而初始化指针只把字符串的地址拷贝给指针。
+
+### 1.4数组和指针的区别
+
+两者的只要区别是：数组名heart是常量，而指针名head是变量。
+
+（1）两者都可以使用数组表示法：
+
+heart[i]; head[i]
+
+（2）两者都能进行指针加法操作：
+
+*(heart + i);  *(head + i)
+
+但是只有指针表示法可以进行递增操作：
+
+*(head++)
+
+### 1.5字符串数组
+
+`int main(void)`
+`{`
+	`const char *mytalents[LIM] = {`
+	`"Adding numbers swiftly",`
+	`"Multiplying accurately",`
+	`"Stashing data",`
+	`"Following instructions to the letter",`
+	`"Understanding the C language"`
+	`};`
+	`char yourtalents[LIM][SLEN] ={`
+	`"Walking in a straight line",`
+	`"Sleeping",`
+	`"Watching television",`
+	`"Mailing letters",`
+	`"Reading email"`
+	`};`
+	`int i;`
+	`puts("Let's compare talents.");`
+	`printf("%-36s %-24s\n", "My talents", "Your talnets");`
+	`for(i =0; i < LIM; i++)`
+		`printf("%-36s %-24s\n", mytalents[i], yourtalents[i]);`
+	`printf("\nsizeof mytalnets: %zd, sizeof yourtalnets: %zd\n",sizeof(mytalents),sizeof(yourtalents));`
+	`return 0;` 	
+`}`
+
+结果：
+
+`Let's compare talents.`
+`My talents                           Your talnets`
+`Adding numbers swiftly               Walking in a straight line`
+`Multiplying accurately               Sleeping`
+`Stashing data                        Watching television`
+`Following instructions to the letter Mailing letters`
+`Understanding the C language         Reading email`
+
+`sizeof mytalnets: 40, sizeof yourtalnets: 200`
+
+两者都代表5个字符串。使用一个下标时都分别表示一个字符串，如mytalents[0]和yourtalents[0]；使用两个下标时都分别表示一个字符。
+
+但是它们也有区别。mytalents数组是一个内含5个指针的数组，在我们的系统中共占用40字节。而yourtalents是一个内含5个数组的数组，每个数组内含40个char类型的值，共占用200个字节。mytalents中的指针指向初始化时所用的字符串字面量的位置，这些字符串字面量被储存在静态内存中；而yourtalents中的数组则储存着字符串字面量的副本，所以每个字符串都被储存了两次。此外，为字符串数组分配内存的使用率较低，yourtalents中的每个元素的大小必须相同，而且必须是储存最长字符串的大小。
+
+## 2.字符串输入
+
+如果想把一个字符串读入程序，首先必须预留储存该字符串的空间，然后用输入函数获取该字符串。
+
+### 2.1分配空间
+
+要做的第一件事就是分配空间，以储存稍后读入的字符串。这意味着必须要为字符串分配足够的空间。不要指望计算机在读取字符串时顺便计算它的长度，然后再分配空间。
+
+char  *name;
+
+scanf("%s", name);
+
+虽然可能会通过编译，但是在读入name时，name可能会擦写掉程序中的数据或代码，从而导致程序异常中止。因为scanf()要把信息拷贝至擦拭农户指定的地址上，而此时该参数是个未初始化的指针，name可能会指向任何地方。
+
+### 2.2输入函数
+
+(1)gets()
+
+在读取字符串时，scanf()和转换说明%s只能读取一个单词。可是在程序中要读取一整行输入，而不仅仅是一个单词。gets()函数简单以勇，它读取整行输入，直至遇到换行符，然后丢弃换行符，储存其余字符。
+
+gets()唯一参数是words，它无法检查数组是否装得下输入行。gets()函数只知道数组的开始处，并不知道数组中有多少个元素。
+
+如果输入的字符串过长，会导致缓冲区溢出（buffer overflow），即多余的字符超出了指定的目标空间。如果这些多余的字符只是占用了尚未使用的内存，就不会立即出现问题；如果它们擦写掉程序中的其他数据，会导致程序异常中止。
+
+（2）gets()的替代品----->fgets()
+
+fgets()函数通过第2个参数限制读入的字符数来解决溢出的问题。该函数专门设计用于处理文件输入，所以一般情况下可能不大好用。fgets()和gets()的区别如下。
+
+1.fgets()函数的第2个参数指明了读入字符的最大数量。如果该参数的值是n，那么fgets()将读入n-1个字符，或者读到遇到的第一个换行符为止；
+
+2.如果fgets()读到一个换行符，会把它储存在字符串中。这点于gets()不同，gets()会丢弃换行符；
+
+3.fgets()第3个参数指明要读入的文件。
+
+（3）gets_s()函数
+
+gets_s()函数与fgets()类似，用一个参数限制读入的字符数，get_s(words, STLEN);
+
+gets_s()函数与fgets()的区别如下：
+
+1.gets_s()只从标准输入中读取数据，所以不需要第3个参数。
+
+2.如果gets_s()读到换行符，会丢弃它而不是储存它。
+
+3.如果gets_s()读到最大字符都没有读到换行符，会执行以下几步。首先把目标数组中的首字符设置为空字符，读取并丢弃随后的输入直至读到换行符或文件的结尾，然后返回空指针。接着，调用以来实现的“处理函数”，可能会中止或退出程序。
+
+如果输入行太长会怎么样？使用gets()不安全，它会擦写现有数据，存在安全隐患。gets_s()函数很 安全，但是，如果不希望程序中止或退出，就要知道如何编写特殊的“处理函数”。另外，如果打算让程序继续运行，gets_s()会丢弃输入行的其余字符。由此可见，当输入太长，超过数组可容纳的字符数时，fgets()函数最容易使用，而且可以选择不同的处理方式。
+
+## 3.字符串函数
+
+### 3.1strlen()函数
+
+strlen()函数用于统计字符串的长度，下面的函数可以缩短字符串的长度，其中用到了strlen():
+
+`void fit(char *string, unsigned int size)`
+
+`{`
+
+​		`if(strlen(string) > size)`
+
+​				`string[size] = '\0';`
+
+`}`
+
+该函数要改变字符串，所以函数头在声明形式参数string时没有使用const限定符。
+
+### 3.2strcat()函数和strncat()函数
+
+strcat()函数用于拼接字符串，函数接受两个字符串作为参数。该函数把第2个字符串的备份附加在第1个字符串末尾，并把拼接后形成的新字符串作为第1个字符串，第2个字符串不变，strcat()函数的类型是char *(即，指向char的指针)。strcat()函数返回第1个参数，即拼接第2个字符串后的第1个字符串的地址。
+
+strcat()函数无法检查第1个数组是否能容纳第2个字符串。如果分配给第1个数组的空间不够大，多出来的字符溢出到相邻存储单元时就会出问题。
+
+strncat()函数，该函数的第3个参数制定了最大添加字符数。例如：strncat(bugs, addon, 13)将把addon字符串的内容附加给bugs，在加到第13个字符或遇到空白字符时停止。因此，算上空白字符，bugs数组应该足够大，以容纳原始字符串、添加原始字符串在后面的13个字符和末尾的空字符。
+
+### 3.3strcmp()函数和strncmp()
+
+假设要把用户的相应与已存储的字符串作比较，该函数比较的是字符串内容，不是字符串的地址。
+
+`#define SLZE 40`
+`#define ANSWER "Grant"`
+
+`char *s_gets(char *st, int n);`
+
+`int main(void)`
+`{`
+	`char try[SLZE];`
+	`puts("Who is buried in Grant's tomb");`
+	`s_gets(try, SLZE);`
+	`while(strcmp(try, ANSWER)!= 0)`
+	`{`
+		`puts("No, that's wrong. Try again.");`
+		`s_gets(try, SLZE);`
+	`}`
+	`puts("That's right!");`
+	`return 0;` 	
+`}`
+
+`char *s_gets(char *st, int n)`
+`{`
+	`char * ret_val;`
+	`int i = 0;`
+``	
+	ret_val = fgets(st, n, stdin);
+	if(ret_val)
+	{
+		while(st[i] != '\n' && st[i] != '\0')
+			i++;
+		if (st[i] == '\n')
+			st[i] = '\0';
+		else
+			while(getchar() != '\n')
+				continue;
+	}
+	return ret_val;
+`}`
+
+结果：
+
+`Who is buried in Grant's tomb`
+`your`
+`No, that's wrong. Try again.`
+`Grant`
+`That's right!`
+
+strncmp()函数比较字符串中的字符，直到发现不同的字符为止，这一过程可能会持续到字符串的末尾。而strncmp()函数在比较两个字符串时，可能比较到字符不同的地方，也可以只比较第3个参数指定的字符数。
+
+### 3.4strcpy()函数和strncpy()函数
+
+如果pt1和pt2都是指向字符串的指针，那么下面的语句拷贝的是字符串的地址而不是字符串本身：
+
+pt2 = pt1;
+
+如果希望拷贝整个字符串，要使用strcpy()函数。
+
+char * str;
+
+strcpy(str, "The C of Tramquility");
+
+strcpy()把“The C of Tramquility”拷贝至str指向的地址上，但是str未被初始化，所以该字符串可能被拷贝到任意的地方！
+
+总之，strcpy()接受两个字符串指针作为参数，可以把指向源字符串的第2个指针声明为指针、数组名或字符串常量；而指向源字符串副本的第1个指针应该指向一个数据对象（如：数组）且该对象有足够的空间储存源字符串的副本。记住，声明数组将分配储存数据的空间，而声明指针只储存一个地址的空间。
+
+strcpy()的其他属性
+
+strcpy()函数还有其他属性。第一，strcpy()的返回类型是char*，该函数返回的是第1个参数的值，即一个字符的地址。第二，第一个参数不必指向数组的开始。这个属性可用于拷贝数组的一部分。
+
+ps = strpcpy(copy + 7, orig);
+
+strcpy()和strcat()都有同样的问题，它们都不能检车目标空间是否能容纳源字符串的副本。拷贝字符串用strncpy()更安全。该函数的第三个参数指明可拷贝的最大字符数。
+
+### 3.5sprintf()函数
+
+sprintf()函数声明在stdio.h中，而不是在string.h中。该函数和printf()类似，但是他是把数据写入到字符串，而不是打印在显示器上。因此，该函数可以把多个元素组合成一个字符串。sprintf()的第一个参数是目标字符串的地址，其余参数和printf()相同，只不过sprintf()把组合后但字符串储存在数组formal中而不是显示在屏幕上。
+
+# 存储类别、链接和内存管理
+
+## 1.存储类别
+
+程序员通过C的内存管理系统指定变量的作用域和生命期，实现对程序的控制。
+
+C提供了多种不同的模型或存储类别（storage class）在内存中储存数据。从硬件方面来看，被储存的每个值都占用一定的物理内存，C语言把这样的一块内存称为对象（object）。对象可以存储一个或多个值。一个对象可能并未储存实际的值，但是它在储存适当的值时一定具有相应的大小（面向对象编程中的对象指的是类对象，其定义包括数据和允许对数据进行的操作，C不是面向对象的编程）。
+
+从软件方面来看，程序需要一种方法访问对象。这可以通过声明变量来完成。
+
+存储期：所谓存储期是指对象在内存中保留了多长时间。标识符用于访问对象，可以用作用域和链接描述标识符，标识符的作用域和链接表明了程序的哪些部分可以使用它。不同的存储类别具有不同的存储器、作用域和链接。
+
+
+
+
+
+
+
+
+
+
 
 
 
