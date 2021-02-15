@@ -952,11 +952,903 @@ extern char Coal；
 
 ## 2.分配内存：malloc()和free()
 
+可以在程序运行时分配更多的内存，主要工具是malloc()函数。该函数接受一个参数：所需的内存字节数。malloc()函数会找到合适的空闲内存块，这样的内存是匿名的。也就是说，malloc()分配内存，但是不会为其赋名。然而，它确实返回动态分配内存块的首字节地址。因此，可以把该地址赋给一个指针变量，并使用指针访问这块内存。malloc()函数可用于返回指向数组的指针、指向结构的指针等，所以通常该函数的返回值会被强制转换为匹配的类型。然而，把指向void的指针赋给任意类型的指针完全不用考虑类型匹配的问题。如果malloc()分配内存失败，将返回空指针。
+
+使用malloc()创建一个数组，除了用malloc()在程序运行时请求一块内存，还需要一个指针记录这块内存的位置。
+
+double *ptd;
+
+ptd = (double*)malloc(30 * sizeof(double));
+
+以上代码为30个double类型的值请求内存空间，并设置ptd指向该位置。***注意，指针ptd被声明为指向一个double类型，而不是指向内含30个double类型值的块。***
+
+现在，我们有3种创建数组的方法：
+
+（1）声明数组时，用常量表达式表示数组的维度，用数组名访问数组的元素。可以用静态内存或自动内存创建这种数组。
+
+（2）声明变长数组时，用变量表达式表示数组的维度，用数组名访问数组的元素。具有这种特性的数组只能在自动内存中创建。
+
+（3）声明一个指针，调用malloc()，将其返回值赋给指针，使用指针访问数组的元素，该指针可以是静态的或自动的。
+
+使用第2种和第3种方法可以自动创建动态数组（dynamic  array）。这种数组和普通数组不同，可以在程序运行时选择数组的大小和分配内存。
+
+ptd = (double *)malloc(n * sizeof(double));
+
+通常，malloc()要与free()配套使用。free()函数的参数是之前malloc()返回的地址，该函数释放之前malloc()分配的内存。因此，动态分配内存的存储期从调用malloc()分配内存到调用free()释放内存为止。每次调用malloc()分配内存给程序使用，每次调用free()把内存归还内存池中，这样便可重复使用这些内存。free()的参数应该是一个指针，指向由malloc()分配的一块内存。不能用free()释放通过其他方式（如：声明一个数组。）分配的内存，malloc()和free()的原型都在stdlib.h头文件中。
+
+### 2.1动态内存分配和变长数组
+
+变长数组（VLA）和调用malloc()在功能上有些重合。例如，两者都可用于创建在运行时确定大小的数组。不同的是，变长数组是自动存储类型，***因此，程序在离开变长数组定义所在的块时，变长数组占用的内存空间会被自动释放，***不必使用free()。另一方面，用malloc()创建的数组不必局限在一个函数内访问。例如，可以这样做：被调函数创建一个数组并返回指针，供主调函数访问，然后主调函数在末尾调用free()释放之前被调函数分配的内存。另外，free()所用的指针变量可以与malloc()的指针变量不同，但是两个指针必须储存相同的地址。但是，不能释放同一块内存两次。
+
+对于多维数组而言，使用变长数组更为方便。malloc()也可以创建二维数组，但是语法比较繁琐。如果编译器不支持变长数组特性，就只能固定二维数组的维度。
+
+int n =5;
+
+int m = 6;
+
+int ar2[n] [m];  //	变长数组
+
+int (* p2) [6];		
+
+int (* p3) [m]；//要求支持变长数组
+
+p2 = (int (*)[6])malloc(n * 6 * sizeof(int));
+
+p3 =  (int (*)[m])malloc(n * m * sizeof(int));//n*m数组（要求支持变长数组）
+
+未使用的内存块分散在已使用的内存块之间，使用动态内存通常比使用栈内存慢。
+
+# 文件输入/输出
+
+文件用于储存程序、文档、数据、书信、表格、图形、照片、视频和许多其它种类的信息。
+
+文件通常是在磁盘或固态硬盘上的一段已命名的存储区。
+
+# 结构和其他数据形式
+
+## 1.结构
+
+结构声明描述了一个结构的组织布局。声明类似下面这样：
+
+struct  book{
+
+​		char title[MAXTITL];
+
+​		char author[MAXAUTL];
+
+​		float  value;
+
+};
+
+该声明描述了一个由两个字符数组和一个float类型变量组成的结构，该声明并未创建实际的数据对象，只描述了该对象由什么组成。
+
+struct  book  library;
+
+这把library声明为一个使用book结构布局的结构变量。
+
+在结构声明中，用一对花括号括起来的是结构成员列表。可以把结构声明放在所有函数的外部，也可以放在一个函数定义的内部，如果把结构声明置于一个函数的内部，它的标记就只限于该函数内部使用，如果把结构声明置于函数的外部，那么该声明之后的所有函数都能使用它的标记。
+
+### 1.1定义结构变量
+
+结构有两层含义，一层含义是“结构布局”，结构布局告诉编译器如何表示数据，但是它并未让编译器为数据分配空间。下一步是创建一个结构变量。
+
+struct  book  library;
+
+编译器执行这行代码便创建了一个结构变量library。编译器使用book模板为该变量分配空间。在结构变量的声明中，struct  book 所起的作用相当于一般声明中的int或float，例如，可以定义两个struct  book类型的变量，或者甚至是struct  book类型结构的指针：
+
+struct  book  doyle,  *ptbook;
+
+struct {  / * 无结构标识符 * /
+
+​		char title[MAXTITL];
+
+​		char author[MAXAUTL];
+
+​		float  value;
+
+};
+
+如果打算多次使用结构模板，就要使用带标记的形式，或者使用typedef。
+
+### 1.2访问结构成员
+
+如何访问结构中的成员？使用结构成员运算符-----点（.）访问结构中的成员。.比&的优先级高，因此&library.float 与&（library.float）一样。
+
+结构的初始化器使用点运算和成员名（而不是方括号和下标）标识特定的元素。例如，只初始化book结构的value成员，可以这样做：
+
+struct  book  surprise  =  {.value = 10.99};
+
+可以按照任意顺序使用指定初始化器：
+
+struct  book  gift = {
+
+​		.value = 25.99,
+
+​		.author = "James  Broadfool",
+
+​		.title  =  "Rue for the Toad"
+
+};
+
+与数组类似，在指定初始化器后面的普通初始化器，为指定成员后面的成员提供初始值，另外，对特定成员的最后一次赋值才是它实际获得的值。
+
+struct  book  gift = {
+
+​		.value = 18.90,
+
+​		.author = "James  Broadfool",
+
+​		0.25
+
+};
+
+赋给value的值是0.25，因为它在结构声明中紧跟在author成员之后。新值0.25取代了之前的18.90。
+
+### 1.3声明结构数组
+
+struct  book  library[MAXBKS];
+
+标识结构数组的成员：
+
+library[2].value
+
+library[2],title[4] //数组中library[2]元素的title成员的一个字符
+
+### 1.4嵌套结构
+
+在一个结构中包含另外一个结构（即嵌套结构）很方便。
+
+`int main(void)`
+`{`
+	`struct guy fellow={`
+		`{"Ewen", "Villard"`
+		`},`
+		`"grilled salmon",`
+		`"personality coach",`
+		`98112.00`
+	`};`
+	`printf("Dear %s, \n\n",fellow.handle.first);`
+	`printf("%s%s.\n",msgs[0],fellow.handle.first);`
+	`printf("%s%s\n",msgs[1],fellow.job);`
+	`printf("%s\n",msgs[2]);`
+	`printf("%s%s%s",msgs[3],fellow.favfood,msgs[4]);`
+	`if (fellow.income > 150000.0)`
+		`puts("!!");`
+	`else if(fellow.income > 75000.0)`
+		`puts("!");`
+	`else`
+		`puts(".");`	
+	`return 0;` 	
+`}`
+
+`const char *msgs[5]=`
+`{`
+	`"Thank you for the wonderful evening,",`
+	`"You certainly prove that a",`
+	`" is a special kindof guy.We must get together",`
+	`"over a delicious",`
+	`" and have a few laughs"`
+`};`
+
+`struct names`
+`{`
+	`char first[LEN];`
+	`char last[LEN];`
+`};`
+
+`struct guy`
+`{`
+	`struct names handle;`
+	`char favfood[LEN];`
+	`char job[LEN];`
+	`float income;`
+`};`
+
+结构的声明，每个成员后面是‘；’，而结构的初始化，每个成员后面是‘，’。如何访问嵌套结构成员，需要使用两次点运算符。
+
+## 2.指向结构的指针
+
+为何要使用指向结构的指针？
+
+（1）就像指向数组的指针比数组本身更容易操控一样，指向结构的指针通常比结构本身更容易操控；
+
+（2）在一些早期的C实现中，结构不能作为参数传递给函数，但是可以传递指向结构的指针；
+
+（3）即使能传递一个结构，传递指针通常更有效率；
+
+（4）一些用于表示数据的结构中包含指向其他结构的指针。
+
+`int main(void)`
+`{`
+	`struct guy fellow[2]={`
+		`{{"Ewen", "Villard"},`
+		`"grilled salmon",`
+		`"personality coach",`
+		`98112.00`
+		`},`
+		`{{"Rodney", "Swillbelly"},`
+		`"tripe",`
+		`"tabloid editor",`
+		`432400.00`
+		`}`
+	`};`
+	`struct guy *him;  //指向结构的指针
+	printf("address #1: %p #2: %p\n", &fellow[0], &fellow[1]);
+	him = &fellow[0];  //告诉编译器该指针指向何处
+	printf("pointer #1: %p #2: %p\n", him, him+1);
+	printf("him->income is $%.2f: (*him).income is $%.2f\n", him->income, (*him).income);`
+	`him++;`
+	`printf("him->favfood is %s: hime->handle.last is %s\n", him->favfood, him->handle.last);` 
+	`return 0;` 	
+`}`
+
+结果：
+
+`address #1: 000000000063FD60 #2: 000000000063FDB4`
+`pointer #1: 000000000063FD60 #2: 000000000063FDB4`
+`him->income is $98112.00: (*him).income is $98112.00`
+`him->favfood is tripe: hime->handle.last is Swillbelly`
+
+### 2.1声明和初始化结构指针
+
+struct guy *him;
+
+首先是关键字struct，其次是结构标记guy，然后是一个星号（*），其后跟着指针名。该声明并未创建一个新的结构，但是指针him现在可以指向任意现有的guy类型的结构，例如，如果barney是一个guy类型的结构，可以这样写：
+
+him = &barney;
+
+和数组不同的是，结构名并不是结构的地址，因此要在结构名前面加上&运算符。
+
+在本例中，fellow是一个结构数组，这意味着fellow[0]是一个结构，所以，要让him指向fellow[0]，可以这样写：
+
+him = &fellow[0];
+
+### 2.2用指针访问成员
+
+指针him指向结构变量fellow[0]，如何通过him获得fellow[0]的成员值？
+
+方法1：使用->运算符。
+
+如果him == &barney，那么him->income即是barney.income
+
+如果him == &fellow[0]，那么him->income即是fellow[0].income
+
+换句话说，->运算符后面的结构指针和.运算符后面的结构名工作方式相同（不能写成him.income，因为him不是结构名）。
+
+方法2：如果him == &fellow[0]，那么*him == fellow[0]，因为&和 * 是一对互逆运算符。
+
+fellow[0].income == (*him).income
+
+必须要使用圆括号，因为.运算符比*运算符的优先级高。
+
+## 3.向函数传递结构信息
+
+程序员可以选择是传递结构本身，还是传递指向结构的指针，如果只关心结构中的某一部分，也可以把结构的成员作为参数。
+
+### 3.1传递结构成员
+
+只要结构成员是一个具有单个值的数据类型（即，int及其相关类型、char、float、double或指针），便可把它作为参数传递给接受该特定类型的函数。
+
+### 3.2传递结构的地址
+
+`int main(void)`
+`{`
+	`struct funds stan = {`
+		`"Garlic-Melon Bank",`
+		`4032.27,`
+		`"Lucky's Savings and Loan",`
+		`8543.94`
+	`};` 
+	`printf("Stan has a total of $.3f.\n", sum(&stan));`
+	`return 0;` 	
+`}`
+
+`double sum(const struct funds * money)`
+`{`
+	`return(money->bankfund + money->savefund);`
+`}`
+
+结果：
+
+`Stan has a total of $12576.210.`
+
+sum()函数使用指针指向funds结构的指针（money）作为它的擦拭农户。把地址&stan传递给该函数，使得指针money指向结构stan。由于该函数不能改变指针所指向值的内容，所以把money声明为一个指向const的指针。
+
+虽然该函数并未使用其它成员，但是而也可以访问他们。注意，必须使用&运算符来获取结构的地址，和数组名不同，结构名只是其地址的别名。
+
+### 3.3传递结构
+
+`int main(void)`
+`{`
+	`struct funds stan = {`
+		`"Garlic-Melon Bank",`
+		`4032.27,`
+		`"Lucky's Savings and Loan",`
+		`8543.94`
+	`};` 
+	`printf("Stan has a total of $.3f.\n", sum(&stan));`
+	`return 0;` 	
+`}`
+
+`double sum(const struct funds moolah)`	//参数是一个结构
+`{`
+	`return(money->bankfund + money->savefund);`
+`}`
+
+结果：
+
+`Stan has a total of $12576.210.`
+
+与传递指针相比，调用sum()时，编译器根据funds模板创建了一个名为moolah的自动结构变量。然后，该结构的各成员被初始化为stan结构变量相应成员的值的副本。
+
+### 3.4其他结构特性
+
+可以把一个结构赋值给另外一个结构，但是数组不能这样做。如果n_data和o_data都是相同类型的结构，可以这样做：
+
+o_data = n_data;
+
+这条语句把n_data的每个成员的值都赋给o_data的相应成员，即使成员是数组，也能完成赋值。另外，还可以把一个结构初始化为相同类型的另一个结构：
+
+struct names right_field = {"Ruthie", "George"};
+
+struct names captain = right_field;	//把一个结构初始化为另一个结构
+
+**函数不仅能把结构本身作为参数传递，还能把结构作为返回值返回。把结构作为函数参数可以把结构的信息传递给函数；把结构作为返回值的函数能把结构的信息从被掉函数传回主调函数。结构指针也允许这种双向通信，因此可以选择任一种方法来解决编程问题。**
+
+`struct namect{`
+	`char fname[NLEN];`
+	`char lname[NLEN];`
+	`int letters;`
+`};`
+`void getinfo(struct namect *);`
+`void makeinfo(struct namect *);`
+`void showinfo(const struct namect *);`
+`int main(void)`
+`{`
+	`struct namect person;`
+	`getinfo(&person);`
+	`makeinfo(&person);`
+	`showinfo(&person);`
+	`return 0;` 	
+`}`
+
+`void getinfo(struct namect *pst)`
+`{`
+	`printf("Please enter your first name.\n");`
+	`s_gets(pst->fname, NLEN);`
+	`printf("Please enter your last name.\n");`
+	`s_gets(pst->lname, NLEN);`
+`}`
+
+`void makeinfo(struct namect * pst)`
+`{`
+	`pst->letters = strlen(pst->fname)+strlen(pst->lname);`
+`}`
+
+`void showinfo(const struct namect * pst)`
+`{`
+	`printf("%s%s, your name contains %d letters.\n", pst->fname, pst->lname, pst->letters);`
+`}`
+
+`char *s_gets(char *st, int n)`
+`{`
+	`char * ret_val;`
+	`char *find;`	
+
+	ret_val = fgets(st, n, stdin);
+	if(ret_val)
+	{
+		find = strchr(st,'\n');
+		if(find)
+			*find = '\0';
+		else
+			while(getchar()!= '\n')
+				continue;
+	}
+	return ret_val;
+`}`
+
+结果：
+
+Please enter your first name.
+liu
+Please enter your last name.
+jihong
+liujihong, your name contains 9 letters.
+
+### 3.5结构和结构指针的选择
+
+假设要编写一个与结构相关的函数，是用结构指针作为参数还是用结构作为参数和返回值？
+
+把指针作为参数有两个优点：执行起来很快，只需要传递一个地址，缺点是无法保护数据。被调函数中的某些操作可能会意外影响原来结构中的数据。
+
+把结构作为参数传递的优点是：函数处理的使原始的数据的副本，这保护了原始数据。另外，diamagnetic风格也更清除。缺点是：传递结构浪费时间和存储空间。尤其是把大型结构传递给函数，而它只使用结构中的一两个成员时特别浪费时间，这种情况下传递指针或只传递函数所需的成员更合理。
+
+### 3.6结构中的字符数组和字符指针
+
+#define LEN 20
+
+struct  names{
+
+​		char first[LEN];
+
+​		char last[LEN];
+
+};
+
+struct  pnames{
+
+​		char *first;
+
+​		char *last;
+
+};
+
+struct names veep = {"Talia", "Summers"};
+
+struct pnames treas = {"Brad", "Fallingjaw"};
+
+以上代码均没有问题，也能正常运行，但是思考以下字符串被储存在何处。对于struct  names类型的结构变量veep，以上字符串储存在结构内部，结构总共要分配40字节储存型名。然而，对于struct  pnames类型的结构变量treas，以上字符串储存在编译器储存常量的地方。结构本身只储存了两个地址。struct pname结构不用为字符串分配任何存储空间。它使用的是储存在别处的字符串。简而言之，pnames结构变量中指针应该只用来在程序中管理哪些已分配和在别处分配的字符串。
+
+struct  pnames  attorney;
+
+scanf("%s", attorney.last); 	//未初始化的变量，可能导致程序崩溃
+
+### 3.7结构、指针和malloc()
+
+***如果使用malloc()分配内存并使用指针储存该地址，那么在结构中使用指针处理字符串就比较合理。这种方法的优点是，可以请求malloc()为字符串分配合适的存储空间。***
+
+用指针代替数组
+
+`struct namect{`
+	`char *fname;`
+	`char *lname;`
+	`int letters;`
+`};`
+
+调用malloc()函数分配存储空间，并把字符串拷贝到新分配的存储空间中。
+
+`void getinfo(struct namect *pst)`
+`{`
+	`char temp[SLEN];`
+	`printf("Please enter your first name.\n");`
+	`s_gets(temp,SLEN);`
+	`//分配内存以储存名`
+	`pst->fname = (char *)malloc(strlen(temp)+1);`
+	`//把名拷贝到动态分配的内存中`
+	`strcpy(pst->fname,temp);`
+	`printf("Please enter your last name.\n");`
+	`s_gets(temp,SLEN);`
+	`pst->lname = (char *)malloc(strlen(temp)+1);`
+	`strcpy(pst->lname,temp);`
+`}`
+
+***要理解这两个字符串都未存储在结构中，它们储存在malloc()分配的内存块中。然而，结构中储存着这两个字符串的地址，处理字符串的函数通常都要使用字符串的地址。***
+
+代码：
+
+`int main(void)`
+
+`{`
+	`struct namect person;`
+	`getinfo(&person);`
+	`makeinfo(&person);`
+	`showinfo(&person);`
+	`cleanup(&person);`
+``	
+
+	return 0; 	
+`}`
+
+`void getinfo(struct namect *pst)`
+`{`
+	`char temp[SLEN];`
+	`printf("Please enter your first name.\n");`
+	`s_gets(temp,SLEN);`
+	`//分配内存以储存名`
+	`pst->fname = (char *)malloc(strlen(temp)+1);`
+	`//把名拷贝到动态分配的内存中`
+	`strcpy(pst->fname,temp);`
+	`printf("Please enter your last name.\n");`
+	`s_gets(temp,SLEN);`
+	`pst->lname = (char *)malloc(strlen(temp)+1);`
+	`strcpy(pst->lname,temp);`
+`}`
+
+`void makeinfo(struct namect * pst)`
+`{`
+	`pst->letters = strlen(pst->fname)+strlen(pst->lname);`
+`}`
 
 
+`void showinfo(const struct namect * pst)`
+`{`
+	`printf("%s%s, your name contains %d letters.\n", pst->fname, pst->lname, pst->letters);`
+`}`
 
+`void cleanup(struct namect * pst)`
+`{`
+	`free(pst->fname);`
+	`free(pst->lname);`
+`}`
+`double sum(const struct funds * money)`
+`{`
+	`return(money->bankfund + money->savefund);`
+`}`
 
-### 
+`char *s_gets(char *st, int n)`
+`{`
+	`char * ret_val;`
+	`char *find;`
+``	
+	ret_val = fgets(st, n, stdin);
+	if(ret_val)
+	{
+		find = strchr(st,'\n');
+		if(find)
+			*find = '\0';
+		else
+			while(getchar()!= '\n')
+				continue;
+	}
+	return ret_val;
+`}`
+
+### 3.8复合字面量和结构
+
+如果只需要一个临时结构值，复合字面量很好用。可以使用复合字面量创建一个数组作为函数的参数或赋值给另一个结构。如下：
+
+（struct book){"The Idiot", "Fyodor Dostoyevsky", 6.99}
+
+复合字面量在所有函数的外部，具有静态存存储期；如果复合字面量在块中，则具有自动存储期。复合字面量金额普通初始化列表的语法规则相同。
+
+### 3.9伸缩型数组成员
+
+伸缩型数组：第1个特性是，该数组不会立即存在；第2个特性是，使用这个伸缩型数组成员可以编写合适的代码，就好像它确实存在并具有所需数目的元素一样。
+
+首先，声明一个伸缩型数组成员有如下规则：
+
+（1）伸缩型数组成员必须是结构的最后的一个成员；
+
+（2）结构中必须至少有一个成员；
+
+（3）伸缩数组的声明类似于普通数组，只是它的方括号中是空的。
+
+struct  flex
+
+{
+
+​		int count;
+
+​		double average;
+
+​		double scores[];		//伸缩型数组成员
+
+}
+
+声明一个struct flex类型的结构变量时，不能用scores做任何事，因为没有给这个数组预留存储空间。C99的意图并不是让声明struct flex类型的变量，而是希望你声明一个指向struct  flex类型的指针，然后用malloc()来分配足够的空间，以存储struct  flex类型结构的常规内容和伸缩型数组成员所需的额外空间。
+
+struct flex *pf;	//声明一个指针
+
+//请求未一个结构和一个数组分配存储空间
+
+pf = malloc(sizeof(struct flex)+5*sizeof(double));
+
+现在又足够的存储空间储存count 、average和一个内含5个double类型值的数组。可以使用指针访问这些成员：
+
+pf->count = 5;
+
+pf->scores[2] = 18.5;
+
+带伸缩型数组成员的结构确实有一些特殊的处理要求。第一，不能用结构进行赋值或拷贝：
+
+struct flex *pf1, *pf2;
+
+*pf2 = *pf1;	//不要这样做
+
+这样只能拷贝除伸缩型数组成员以外的其它成员，确实要拷贝，应使用memcpy()函数。
+
+第二，不要以按值的方式把这种结构传递给结构。原因相同，按值传递一个参数于赋值类似。要把结构的地址传递给函数。
+
+第三，不要使用带伸缩型数组成员的结构作为数组成员或另一个结构的成员。
+
+### 3.10使用结构数组的函数
+
+`int main(void)`
+`{`
+	`struct funds jones[N] =` 
+	`{`
+		`{`
+			`"Garlic-Melon Bank",`
+			`4032.27,`
+			`"Lucky's Savings and Loan",`
+			`8543.94`
+		`},`
+		`{`
+			`"Honest Jack's Bank",`
+			`3620.88,`
+			`"Party Time Savings",`
+			`3802.91`	
+		`}` 
+	`};`
+	`printf("The Joneses have a total of $%.2f.\n", sum(jones, N));`
+``	
+
+	return 0; 	
+
+`}`
+
+`double sum(const struct funds money[], int n)`
+`{`
+	`double total;`
+	`int i;`
+	`for(i = 0, total = 0; i < n; i++)`
+		`{`
+			`total += money[i].bankfund + money[i].savefund;`
+		`}`
+	`return (total);`
+`}`
+
+结果：
+
+The Joneses have a total of $20000.00.
+
+数组名jones是该数组的地址，即该数组首元素的地址。因此，指针money的初始值相当于通过下面的表达式获得：
+
+money = &jones[0];
+
+下面是几个要点：
+
+（1）可以把数组名作为数组中第1个结构的地址传递给函数；
+
+（2）然后可以**用数组表示法访问数组中**的其它结构。注意下面的函数调用于使用数组名效果相同：
+
+sum(&jones[0], N)
+
+因jones和&jones[0]的地址相同，使用数组名是传递结构地址的一种间接的方法。
+
+（3）由于sum()函数不能改变原始数据，所以该函数使用了限定符const。
+
+## 4.把结构内容保存到文件中
+
+由于结构可以储存不同类型的信息，所以它是构建数据库的重要工具。储存在一个结构中的整套信息被称为记录，单独的项被称为字段。
+
+`int main(void)`
+`{`
+	`struct book library[MAXBKS];	//结构数组` 
+	`int count = 0;`
+	`int index, filecount;`
+	`FILE *pbooks;`
+	`int size = sizeof(struct book);`
+	`if ((pbooks = fopen("book.txt", "a+")) == NULL)`
+	`{`
+		`fputs("Can't open book.txt file\n", stderr);`
+		`exit(1);`
+	`}`
+	`rewind(pbooks);	//定位到文件开始`
+	`while(count < MAXBKS && fread(&library[count],size,1,pbooks) ==1)` 
+	`{`
+		`if (count == 0)`
+			`puts("Current contents of book.txt:");`
+		`printf("%s by %s: $.2f\n", library[count].title, library[count].author, library[count].value);`
+		`count++;`
+	`}`
+	`filecount = count;`
+	`if(count == MAXBKS)`
+	`{`
+		`fputs("The book file is full.", stderr);`
+		`exit(2);`
+	`}`
+	`puts("Please add new book titles.");`
+	`puts("Press enter at the start of a line to stop.");`
+	`while(count < MAXBKS && s_gets(library[count].title, MAXTITL)!= NULL && library[count].title[0] !='\0')`
+	`{`
+		`puts("Now enter the author.");`
+		`s_gets(library[count].author, MAXAUTL);`
+		`puts("Now enter the value.");`
+		`scanf("%f", &library[count++].value);`
+		`while(getchar() != '\n')`
+			`continue;`
+		`if(count < MAXBKS)`
+			`puts("Enter the next title.");`
+	`}`
+	`if(count > 0)`
+	`{`
+		`puts("Here is the list of your books:");`
+		`for(index = 0; index < count; index++)`
+			`fprintf(pbooks, "%s by %s: $%.2f\n", library[index].title, library[index].author, library[index].value);`//文本文件
+`//		fwrite(pbooks, "%s, ", &library[filecount], size, count - filecount, pbooks);`二进制文件
+	`}`
+	`else`
+		`puts("No books?Too bad.\n");`
+	`puts("Bye.\n");`
+	`fclose(pbooks);`
+	`return 0;` 	
+`}`
+
+## 5.联合简介
+
+联合（union）是一种数据类型，它能在同一个内存空间中储存不同的数据类型（不是同时储存）。
+
+创建联合和创建结构的方式相同，需要一个联合模板和联合变量。可以用一个步骤定义联合，也可以用联合标记分两步定义。下面是一个带标记的联合模板：
+
+union hold{
+
+​		int digit;
+
+​		double bigf1;
+
+​		char letter;
+
+};
+
+然而，声明的联合只能储存一个int类型的值或一个double类型的值或char类型的值。
+
+union hold fit;
+
+union hold save[10];
+
+union hold *pu;
+
+第1个声明创建了一个单独的联合变量fit。编译器分配足够的空间以便它能储存联合声明中占用最大字节的类型。本例中，占用空间最大的是double类型的数据。第2个声明创建了一个数组save，内含10个元素，每个元素都是8字节。第3个声明创建了一个指针，该指针变量储存hold类型联合变量的地址。
+
+可以初始化联合，需要注意，联合只能储存一个值，这与结构不同。
+
+联合的用法，在结构中储存与其成员有从属关系的信息。例如，假设用一个结构表示一辆汽车，如果汽车属于驾驶者，就要用一个结构成员来描述这个所有者。入宫汽车被租赁，那么需要一个成员来描述其租赁公司。
+
+`struct owner{`
+
+​		`char socsecurity[12];`
+
+​		`....`
+
+`};`
+
+`struct leasecompany{`
+
+​		`char name[40];`
+
+​		`char headquarters[40];`
+
+​		`....`
+
+`};`
+
+`union data{`
+
+​		`struct ower owncar;`
+
+​		`struct leasecompany leasecar;`
+
+`};`
+
+`struct car_data{`
+
+​		`char make[15];`
+
+​		`int status;	//私有为0，租赁为1`
+
+​		`union data ownerinfo;`
+
+`}；`
+
+假设flits是car_data类型的结构变量，如果flits.status为0，程序将使用flits.ownerinfo.owncar.socsecurity，如果lits.status为1，程序则使用flits.ownerinfo.leasecar.name。
+
+## 6.枚举类型
+
+可以用枚举类型（enumerated type）声明符号名称来表示整型常量。
+
+enum spectrum {red, orange, yellow, green, blue, violet};
+
+enum spectrum color;
+
+第1个声明创建了spetrum作为标记名，第2个声明使color作为该类型的变量。第1个声明中花括号内的标识符没聚了spectrum变量可能有的值。因此，color可能的值是red、orange、yellow等，这些符号常量被称为枚举符。
+
+### 6.1enum常量
+
+red = 0， orange = 1
+
+red称为一个有名称的常量，代表整数0。类似地，其他标识符都是有名称的常量，分别代表1~5。只要是能使用整型常量的地方就可以使用枚举常量。例如，在声明数组时，可以用枚举常量表示数组的大小；在switch语句中，可以把枚举常量作为标签。
+
+### 6.2默认值
+
+默认情况下，枚举列表中的常量都被赋予0、1、2等。因此，下面的声明中nina的值时3：
+
+enum kids {nippy, slats, skippy, nina, liz};
+
+### 6.3赋值
+
+在枚举声明中，可以为枚举常量指定整数值：
+
+enum level {low = 100, medium = 500, high = 2000};
+
+如果只给一个枚举常量赋值，没有对后面的枚举常量赋值，那么后面的常量会被赋予后续的值。例如，假设有如下的声明：
+
+enum feline {cat, lynx = 10, puma ,tiger};
+
+那么cat 的是0（默认），lynx、puma和tiger的值分别是10，11，12。
+
+## 7.typedef简介
+
+typedef工具是一个高级数据特性，利用typedef可以为某一类型自定义名称。这方面与define类似，但是两者有3处不同：
+
+（1）与#define不同，typedef创建的符号名只受限于类型，不能用于值；
+
+（2）typedef由编译器解释，不是预处理器。
+
+（3）在其受限范围内，typedef比#define更灵活。
+
+typedef unsigned char BYTE;
+
+BYTE x, y[10], *z;
+
+该定义的作用域取决于typedef定义所在的位置。如果定义在函数中，就具有局部作用域，受限于定于所在的函数。如果定义在函数的外面，就具有文件作用域。
+
+用typedef来命名一个结构类型时，可以省略该结构的标签：
+
+typedef struct {double x; double y;} rect;
+
+假设这样使用typedef定义的类型名：
+
+rect r1 = {3.0, 6.0};
+
+rect r2;
+
+r2 = r1；
+
+这两个结构在声明时都没有标记，他们的成员完全相同，C认为这两个结构的类型相同，所以r1和r2间的赋值是有效操作。
+
+使用typedef的第2个原因：typedef常用于给复杂的类型命名。例如：
+
+typedef char (*FRPTC())[5];
+
+把FRPTC声明为一个函数类型，该函数返回一个指针，该指针指向内含5个char类型元素的数组。
+
+## 8.其它声明
+
+理解*、[]和()的优先级：
+
+1.数组名后面的[]和函数名后面的()具有相同的优先级，它们比*（解引用运算符）的优先级高，因此下面的声明risk是一个指针数组，不是指向数组的指针：
+
+int *risks[10]; //声明一个内含10个元素的数组，每个元素都是一个指向int的指针
+
+2.[]和()的优先级相同，由于都是从左到右结合，所以下面的声明中，在应用方括号之前，*先与rusks结合。因此，rusks是一个指向数组的指针，该数组内含10个int类型的元素：
+
+int (*rusks)[10];//声明一个指向数组的指针，该数组内含10个int类型的值
+
+3.[]和()都是从左到右结合。因此下面声明的goods是一个由12个内含50个int类型值的数组组成的二维数组，不是一个有50个内含12个int类型值的数组组成的二维数组：
+
+int goods[12] [50];
+
+把以上的规则用于下面的声明：
+
+int *oof[3] [4];//声明一个3 *4的二维数组，该数组的每个元素都是指向int的指针
+
+[3]比*优先级高，由于从左到右结合，所以[3]先与oof结合。因此，oof首先是一个内含3个元素的数组，然后再与[4]结合，所以oof的每个元素都是内含4个元素的数组。 *说明这些元素都是指针。最后，int表明这4个元素都是指向int的指针。简而言之，oof是一个3 * 4的二维数组，每个元素都是指向int的指针。编译器要为12个指针预留存储空间。
+
+int (*uuf)[3] [4];//声明一个指向3 * 4二维数组的指针，该数组中内含int类型的值
+
+圆括号使得*先与uuf结合，说明uuf是一个指针，所以uuf是一个指向3 * 4 的int类型二维数组的指针。编译器要为一个指针预留存储空间。
+
+int (*uof[3])[4];//声明一个内含3个指针元素的数组，其中每个指针都指向一个内含4个int类型元素的数组
+
+char * fump(int);	//指针函数本质是一个函数，其返回值为指针。
+
+char (*frump)(int);	//函数指针本质是一个指针，其指向一个函数。
+
+char (*flump[3])(int);	//内含3个指针的数组，每个指针指向返回类型为char的函数
+
+typedef int arr5[5];
+
+typedef arr5 * p_arr5;
+
+typedef p_arr5 arrp10[10];
+
+arr5 togs;	//togs是一个内含5个int类型值的数组
+
+p_arr5 p2;	//p2是一个指向数组的指针，该数组内含5个int类型的值
+
+arrp10 ap;	//ap是一个内含10个指针的数组，每个指针都指向一个内含5个int类型值的数组
 
 
 
