@@ -852,6 +852,25 @@ strcpy()和strcat()都有同样的问题，它们都不能检车目标空间是�
 
 sprintf()函数声明在stdio.h中，而不是在string.h中。该函数和printf()类似，但是他是把数据写入到字符串，而不是打印在显示器上。因此，该函数可以把多个元素组合成一个字符串。sprintf()的第一个参数是目标字符串的地址，其余参数和printf()相同，只不过sprintf()把组合后但字符串储存在数组formal中而不是显示在屏幕上。
 
+### 3.6memcpy
+
+头文件：#include <string.h>
+
+memcpy() 用来复制内存，其原型为：
+  void * memcpy ( void * dest, const void * src, size_t num );
+
+memcpy() 会复制 src 所指的内存内容的前 num 个字节到 dest 所指的内存地址上。
+
+memcpy() 并不关心被复制的数据类型，只是逐字节地进行复制，这给函数的使用带来了很大的灵活性，可以面向任何数据类型进行复制。
+
+需要注意的是：
+
+- dest 指针要分配足够的空间，也即大于等于 num 字节的空间。如果没有分配空间，会出现断错误。
+- dest 和 src 所指的内存空间不能重叠（如果发生了重叠，使用 [memmove()](http://c.biancheng.net/cpp/html/156.html) 会更加安全）。
+
+
+与 [strcpy()](http://c.biancheng.net/cpp/html/2540.html) 不同的是，memcpy() 会完整的复制 num 个字节，不会因为遇到“\0”而结束。
+
 # 存储类别、链接和内存管理
 
 ## 1.存储类别
@@ -1849,6 +1868,35 @@ arr5 togs;	//togs是一个内含5个int类型值的数组
 p_arr5 p2;	//p2是一个指向数组的指针，该数组内含5个int类型的值
 
 arrp10 ap;	//ap是一个内含10个指针的数组，每个指针都指向一个内含5个int类型值的数组
+
+# 宏
+
+## 1.定义宏
+
+以下文件在"os_cpu.h"中。
+
+\`#ifndef __OS_CPU_H__`
+`\#define __OS_CPU_H__` 
+
+`/*`
+
+`中间有许多定义啦声明啦！；；`
+
+`*/`
+
+`\#endif /*__OS_CPU_H__*/`
+
+这样**，在编译阶段（ifndef是在编译阶段起作用滴！）**假设有两个文件同时include了这个文件（os_cpu.h），这两个文件如果一个先编译了，那么__OS_CPU_H__就被定义了。当编译到第二个文件的时候，那么在开始的判断（ifnef）就会自动跳出os_cpu.h这个文件的重复编译。这样就避免了重复编译文件。。
+
+## 2.强制使用C编译器
+
+\`#ifdef __cplusplus`
+
+`extern "C"`
+
+`{`
+
+`\#endif`
 
 
 
